@@ -103,10 +103,7 @@ def cycle(n, l, t, pm_start, d):
         d = d * 0.5
     ten_runs_exited = 0
     runs = 0
-    # print "!!!!! Pm MAX = " + str(pm)
-    # print fifteen_by_ten_data
-    # print "###################################################################"
-    # print "5 by 10 to test new PmMAX"
+
     five_by_ten_data = {}
     pms = {
         0: pm,
@@ -178,22 +175,6 @@ def nfe2(children, l):
 
 
 ############################################################################################################################################################
-# def tournament(children, health, t):
-#     best = []
-#     for child in children:
-#         tournament_children = []
-#         tournament_children_health = []
-#         for a in range(t):
-#             index = random.choice(range(len(children)))
-#             tournament_children.append(
-#                 children[index]
-#             )
-#             tournament_children_health.append(
-#                 health[index]
-#             )
-#         nfe_res = tournament_children_health
-#         best.append(tournament_children[nfe_res.index(sorted(nfe_res)[len(nfe_res) - 1])])
-#     return best
 
 #
 # def ProbabilityList(population_d):
@@ -205,7 +186,7 @@ def nfe2(children, l):
 
 def FitnessChoices(population, relative_fitness, number):
     return random.choices(population, weights=relative_fitness, k=number)
-
+# Source:  https://stackoverflow.com/questions/47226362/roulette-wheel-selection-for-non-ordered-fitness-values
 
 def mutation(children, pm):
     local_children = copy.copy(children)
