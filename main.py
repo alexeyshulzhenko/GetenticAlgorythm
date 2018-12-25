@@ -9,6 +9,10 @@ import xlsxwriter
 from functools import reduce
 
 
+L_value = 10
+list_of_deltas = [2, 2.5, 3, 10]
+
+
 def main(global_children, n, t, pm):
     global NFE_COUNTER
     global ten_runs_exited
@@ -19,7 +23,7 @@ def main(global_children, n, t, pm):
     # best_child = []
     progon_successful = False
     while True:
-        children_nfe, best_child_nfe, average_nfe = nfe(children)
+        children_nfe, best_child_nfe, average_nfe = nfe2(children, L_value)  #NFE CHANGE HERE
         after_tournament = FitnessChoices(children, children_nfe, t)
         after_mutation = mutation(after_tournament, pm)
         break_while = False
@@ -150,12 +154,24 @@ def cycle(n, l, t, pm_start, d):
 # Функція пристосованності
 ##########################################################################################################################################################
 def nfe(children):
+
     global NFE_COUNTER
     health_of_all = []
     NFE_COUNTER += 1
     for child in children:
         formula = math.exp(-0.05 * sum(child))
         health_of_all.append(formula)
+    best = sorted(health_of_all)[len(health_of_all) - 1]
+    average = reduce(lambda x, y: x + y, health_of_all) / len(health_of_all)
+    return health_of_all, best, average
+
+    # the goal ('fitness') function to be maximized
+def nfe2(children, l):
+    health_of_all = []
+
+    for child in children:
+        k = len(child) - sum(child)  # number of zeros in binary string???
+        health_of_all.append((l - k) + k * delta)
     best = sorted(health_of_all)[len(health_of_all) - 1]
     average = reduce(lambda x, y: x + y, health_of_all) / len(health_of_all)
     return health_of_all, best, average
@@ -222,218 +238,219 @@ def create_children(n, l):
 def _exiting_population():
     pass
 
+#Тут задається розмір!!!!
+for delta in list_of_deltas:
+    fifteen_by_ten_data, five_by_ten_data = cycle(100, 10, 2, 0.2, 0.1)
 
-fifteen_by_ten_data, five_by_ten_data = cycle(100, 10, 2, 0.2, 0.1)
-
-# count average
-average_and_best_fifteen = {
-}
-for i in fifteen_by_ten_data:
-    average_and_best_fifteen[i] = {}
-    for progon in fifteen_by_ten_data[i]['runs']:
-        for key in progon.keys():
-            average_and_best_fifteen[i][key] = {}
-            if progon["Успішний"] == 1:
-                try:
-                    average_and_best_fifteen[i][key]['data'].append(progon[key])
-                except:
-                    average_and_best_fifteen[i][key]['data'] = [progon[key]]
+    # count average
+    average_and_best_fifteen = {
+    }
+    for i in fifteen_by_ten_data:
+        average_and_best_fifteen[i] = {}
+        for progon in fifteen_by_ten_data[i]['runs']:
+            for key in progon.keys():
+                average_and_best_fifteen[i][key] = {}
+                if progon["Успішний"] == 1:
+                    try:
+                        average_and_best_fifteen[i][key]['data'].append(progon[key])
+                    except:
+                        average_and_best_fifteen[i][key]['data'] = [progon[key]]
+                else:
+                    average_and_best_fifteen[i][key]['data'] = []
+    for pm in average_and_best_fifteen:
+        for key in average_and_best_fifteen[pm].keys():
+            if average_and_best_fifteen[pm][key]['data']:
+                average_and_best_fifteen[pm][key]['average'] = reduce(lambda x, y: x + y,
+                                                                      average_and_best_fifteen[pm][key]['data']) / len(
+                    average_and_best_fifteen[pm][key]['data'])
+                average_and_best_fifteen[pm][key]['best'] = sorted(average_and_best_fifteen[pm][key]['data'])[0]
+                if key == "Середнє здоров'я в популяції": average_and_best_fifteen[pm][key]['best'] = \
+                sorted(average_and_best_fifteen[pm][key]['data'])[len(average_and_best_fifteen[pm][key]['data']) - 1]
+                if key == "Найкраще здоров'я в популяції": average_and_best_fifteen[pm][key]['best'] = \
+                sorted(average_and_best_fifteen[pm][key]['data'])[len(average_and_best_fifteen[pm][key]['data']) - 1]
             else:
-                average_and_best_fifteen[i][key]['data'] = []
-for pm in average_and_best_fifteen:
-    for key in average_and_best_fifteen[pm].keys():
-        if average_and_best_fifteen[pm][key]['data']:
-            average_and_best_fifteen[pm][key]['average'] = reduce(lambda x, y: x + y,
-                                                                  average_and_best_fifteen[pm][key]['data']) / len(
-                average_and_best_fifteen[pm][key]['data'])
-            average_and_best_fifteen[pm][key]['best'] = sorted(average_and_best_fifteen[pm][key]['data'])[0]
-            if key == "Середнє здоров'я в популяції": average_and_best_fifteen[pm][key]['best'] = \
-            sorted(average_and_best_fifteen[pm][key]['data'])[len(average_and_best_fifteen[pm][key]['data']) - 1]
-            if key == "Найкраще здоров'я в популяції": average_and_best_fifteen[pm][key]['best'] = \
-            sorted(average_and_best_fifteen[pm][key]['data'])[len(average_and_best_fifteen[pm][key]['data']) - 1]
-        else:
-            average_and_best_fifteen[pm][key]['average'] = 0
-            average_and_best_fifteen[pm][key]['best'] = 0
+                average_and_best_fifteen[pm][key]['average'] = 0
+                average_and_best_fifteen[pm][key]['best'] = 0
 
-print("#############")
-print(average_and_best_fifteen)
-print("#############")
+    print("#############")
+    print(average_and_best_fifteen)
+    print("#############")
 
-average_and_best_five = {
-}
-for i in five_by_ten_data:
-    average_and_best_five[i] = {}
-    for progon in five_by_ten_data[i]['runs']:
-        for key in progon.keys():
-            average_and_best_five[i][key] = {}
-            if progon["Успішний"] == 1:
-                try:
-                    average_and_best_five[i][key]['data'].append(progon[key])
-                except:
-                    average_and_best_five[i][key]['data'] = [progon[key]]
+    average_and_best_five = {
+    }
+    for i in five_by_ten_data:
+        average_and_best_five[i] = {}
+        for progon in five_by_ten_data[i]['runs']:
+            for key in progon.keys():
+                average_and_best_five[i][key] = {}
+                if progon["Успішний"] == 1:
+                    try:
+                        average_and_best_five[i][key]['data'].append(progon[key])
+                    except:
+                        average_and_best_five[i][key]['data'] = [progon[key]]
+                else:
+                    average_and_best_five[i][key]['data'] = []
+    for pm in average_and_best_five:
+        for key in average_and_best_five[pm].keys():
+            if average_and_best_five[pm][key]['data']:
+                average_and_best_five[pm][key]['average'] = reduce(lambda x, y: x + y,
+                                                                   average_and_best_five[pm][key]['data']) / len(
+                    average_and_best_five[pm][key]['data'])
+                average_and_best_five[pm][key]['best'] = sorted(average_and_best_five[pm][key]['data'])[0]
+                if key == "Середнє здоров'я в популяції": average_and_best_five[pm][key]['best'] = \
+                sorted(average_and_best_five[pm][key]['data'])[len(average_and_best_five[pm][key]['data']) - 1]
+                if key == "Найкраще здоров'я в популяції": average_and_best_five[pm][key]['best'] = \
+                sorted(average_and_best_five[pm][key]['data'])[len(average_and_best_five[pm][key]['data']) - 1]
             else:
-                average_and_best_five[i][key]['data'] = []
-for pm in average_and_best_five:
-    for key in average_and_best_five[pm].keys():
-        if average_and_best_five[pm][key]['data']:
-            average_and_best_five[pm][key]['average'] = reduce(lambda x, y: x + y,
-                                                               average_and_best_five[pm][key]['data']) / len(
-                average_and_best_five[pm][key]['data'])
-            average_and_best_five[pm][key]['best'] = sorted(average_and_best_five[pm][key]['data'])[0]
-            if key == "Середнє здоров'я в популяції": average_and_best_five[pm][key]['best'] = \
-            sorted(average_and_best_five[pm][key]['data'])[len(average_and_best_five[pm][key]['data']) - 1]
-            if key == "Найкраще здоров'я в популяції": average_and_best_five[pm][key]['best'] = \
-            sorted(average_and_best_five[pm][key]['data'])[len(average_and_best_five[pm][key]['data']) - 1]
-        else:
-            average_and_best_five[pm][key]['average'] = 0
-            average_and_best_five[pm][key]['best'] = 0
+                average_and_best_five[pm][key]['average'] = 0
+                average_and_best_five[pm][key]['best'] = 0
 
-print("#############")
-print(average_and_best_five)
-print("#############")
+    print("#############")
+    print(average_and_best_five)
+    print("#############")
 
 
-workbook = xlsxwriter.Workbook('data.xlsx')
-worksheet_1 = workbook.add_worksheet()
-worksheet_2 = workbook.add_worksheet()
+    workbook = xlsxwriter.Workbook('data_with_delta=' + delta + '.xlsx')
+    worksheet_1 = workbook.add_worksheet()
+    worksheet_2 = workbook.add_worksheet()
 
-row = 0
-col = 0
-
-worksheet_1.write(row, col, "Конфігурація Pm:")
-for i in range(10):
-    worksheet_1.write(row, col + 1, "Прогін {0}".format(i + 1))
-    col += 7
-worksheet_1.write(row, col + 1, "Середнє по всім прогонам")
-col += 7
-worksheet_1.write(row, col + 1, "Найкраще по всім прогонам")
-col += 7
-worksheet_1.write(row, col + 1, "Suc Runs")
-
-row = 1
-
-for i in five_by_ten_data:
+    row = 0
     col = 0
-    if row == 1:
-        for progon in five_by_ten_data[i]['runs']:
-            for k in progon.keys():
-                col += 1
-                worksheet_1.write(row, col, k)
-        for key in average_and_best_five[i].keys():
-            col += 1
-            worksheet_1.write(row, col, key)
-        for key in average_and_best_five[i].keys():
-            col += 1
-            worksheet_1.write(row, col, key)
 
+    worksheet_1.write(row, col, "Конфігурація Pm:")
+    for i in range(10):
+        worksheet_1.write(row, col + 1, "Прогін {0}".format(i + 1))
+        col += 7
+    worksheet_1.write(row, col + 1, "Середнє по всім прогонам")
+    col += 7
+    worksheet_1.write(row, col + 1, "Найкраще по всім прогонам")
+    col += 7
+    worksheet_1.write(row, col + 1, "Suc Runs")
+
+    row = 1
+
+    for i in five_by_ten_data:
         col = 0
+        if row == 1:
+            for progon in five_by_ten_data[i]['runs']:
+                for k in progon.keys():
+                    col += 1
+                    worksheet_1.write(row, col, k)
+            for key in average_and_best_five[i].keys():
+                col += 1
+                worksheet_1.write(row, col, key)
+            for key in average_and_best_five[i].keys():
+                col += 1
+                worksheet_1.write(row, col, key)
+
+            col = 0
+            row += 1
+            worksheet_1.write(row, col, five_by_ten_data[i]['pm'])
+            for progon in five_by_ten_data[i]['runs']:
+                for key in progon.keys():
+                    col += 1
+                    worksheet_1.write(row, col, progon[key])
+            for key in average_and_best_five[i].keys():
+                col += 1
+                worksheet_1.write(row, col, average_and_best_five[i][key]['average'])
+            for key in average_and_best_five[i].keys():
+                col += 1
+                worksheet_1.write(row, col, average_and_best_five[i][key]['best'])
+            col += 1
+            print('##########')
+            print(i)
+            print(average_and_best_five[i])
+            worksheet_1.write(row, col, str((len(average_and_best_five[i]['Успішний']['data']) / 10) * 100) + "%")
+
+        else:
+            worksheet_1.write(row, col, five_by_ten_data[i]['pm'])
+            for progon in five_by_ten_data[i]['runs']:
+                for key in progon.keys():
+                    col += 1
+                    worksheet_1.write(row, col, progon[key])
+            for key in average_and_best_five[i].keys():
+                col += 1
+                worksheet_1.write(row, col, average_and_best_five[i][key]['average'])
+            for key in average_and_best_five[i].keys():
+                col += 1
+                worksheet_1.write(row, col, average_and_best_five[i][key]['best'])
+            col += 1
+            print('##########')
+            print(i)
+            print(average_and_best_five[i])
+            worksheet_1.write(row, col, str((len(average_and_best_five[i]['Успішний']['data']) / 10) * 100) + "%")
+
         row += 1
-        worksheet_1.write(row, col, five_by_ten_data[i]['pm'])
-        for progon in five_by_ten_data[i]['runs']:
-            for key in progon.keys():
-                col += 1
-                worksheet_1.write(row, col, progon[key])
-        for key in average_and_best_five[i].keys():
-            col += 1
-            worksheet_1.write(row, col, average_and_best_five[i][key]['average'])
-        for key in average_and_best_five[i].keys():
-            col += 1
-            worksheet_1.write(row, col, average_and_best_five[i][key]['best'])
-        col += 1
-        print('##########')
-        print(i)
-        print(average_and_best_five[i])
-        worksheet_1.write(row, col, str((len(average_and_best_five[i]['Успішний']['data']) / 10) * 100) + "%")
 
-    else:
-        worksheet_1.write(row, col, five_by_ten_data[i]['pm'])
-        for progon in five_by_ten_data[i]['runs']:
-            for key in progon.keys():
-                col += 1
-                worksheet_1.write(row, col, progon[key])
-        for key in average_and_best_five[i].keys():
-            col += 1
-            worksheet_1.write(row, col, average_and_best_five[i][key]['average'])
-        for key in average_and_best_five[i].keys():
-            col += 1
-            worksheet_1.write(row, col, average_and_best_five[i][key]['best'])
-        col += 1
-        print('##########')
-        print(i)
-        print(average_and_best_five[i])
-        worksheet_1.write(row, col, str((len(average_and_best_five[i]['Успішний']['data']) / 10) * 100) + "%")
+    """
+    ##############################################################################
+    """
 
-    row += 1
-
-"""
-##############################################################################
-"""
-
-row_2 = 0
-col_2 = 0
-
-worksheet_2.write(row_2, col_2, "Конфігурація Pm:")
-for i in range(10):
-    worksheet_2.write(row_2, col_2 + 1, "Прогін {0}".format(i + 1))
-    col_2 += 7
-worksheet_2.write(row_2, col_2 + 1, "Середнє по всім прогонам")
-col_2 += 7
-worksheet_2.write(row_2, col_2 + 1, "Найкраще по всім прогонам")
-col_2 += 7
-worksheet_2.write(row_2, col_2 + 1, "Suc Runs")
-
-row_2 = 1
-for i in fifteen_by_ten_data:
+    row_2 = 0
     col_2 = 0
-    if row_2 == 1:
-        for progon in fifteen_by_ten_data[i]['runs']:
-            for k in progon.keys():
-                col_2 += 1
-                worksheet_2.write(row_2, col_2, k)
-        for key in average_and_best_fifteen[i].keys():
-            col_2 += 1
-            worksheet_2.write(row_2, col_2, key)
-        for key in average_and_best_fifteen[i].keys():
-            col_2 += 1
-            worksheet_2.write(row_2, col_2, key)
 
+    worksheet_2.write(row_2, col_2, "Конфігурація Pm:")
+    for i in range(10):
+        worksheet_2.write(row_2, col_2 + 1, "Прогін {0}".format(i + 1))
+        col_2 += 7
+    worksheet_2.write(row_2, col_2 + 1, "Середнє по всім прогонам")
+    col_2 += 7
+    worksheet_2.write(row_2, col_2 + 1, "Найкраще по всім прогонам")
+    col_2 += 7
+    worksheet_2.write(row_2, col_2 + 1, "Suc Runs")
+
+    row_2 = 1
+    for i in fifteen_by_ten_data:
         col_2 = 0
+        if row_2 == 1:
+            for progon in fifteen_by_ten_data[i]['runs']:
+                for k in progon.keys():
+                    col_2 += 1
+                    worksheet_2.write(row_2, col_2, k)
+            for key in average_and_best_fifteen[i].keys():
+                col_2 += 1
+                worksheet_2.write(row_2, col_2, key)
+            for key in average_and_best_fifteen[i].keys():
+                col_2 += 1
+                worksheet_2.write(row_2, col_2, key)
+
+            col_2 = 0
+            row_2 += 1
+            worksheet_2.write(row_2, col_2, fifteen_by_ten_data[i]['pm'])
+            for progon in fifteen_by_ten_data[i]['runs']:
+                for key in progon.keys():
+                    col_2 += 1
+                    worksheet_2.write(row_2, col_2, progon[key])
+            for key in average_and_best_fifteen[i].keys():
+                col_2 += 1
+                worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['average'])
+            for key in average_and_best_fifteen[i].keys():
+                col_2 += 1
+                worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['best'])
+            col_2 += 1
+            print('##########')
+            print(i)
+            print(average_and_best_fifteen[i])
+            worksheet_2.write(row_2, col_2, str((len(average_and_best_fifteen[i]['Успішний']['data']) / 10) * 100) + "%")
+
+        else:
+            worksheet_2.write(row_2, col_2, fifteen_by_ten_data[i]['pm'])
+            for progon in fifteen_by_ten_data[i]['runs']:
+                for key in progon.keys():
+                    col_2 += 1
+                    worksheet_2.write(row_2, col_2, progon[key])
+            for key in average_and_best_fifteen[i].keys():
+                col_2 += 1
+                worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['average'])
+            for key in average_and_best_fifteen[i].keys():
+                col_2 += 1
+                worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['best'])
+            col_2 += 1
+            print('##########')
+            print(i)
+            print(average_and_best_fifteen[i])
+            worksheet_2.write(row_2, col_2, str((len(average_and_best_fifteen[i]['Успішний']['data']) / 10) * 100) + "%")
+
         row_2 += 1
-        worksheet_2.write(row_2, col_2, fifteen_by_ten_data[i]['pm'])
-        for progon in fifteen_by_ten_data[i]['runs']:
-            for key in progon.keys():
-                col_2 += 1
-                worksheet_2.write(row_2, col_2, progon[key])
-        for key in average_and_best_fifteen[i].keys():
-            col_2 += 1
-            worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['average'])
-        for key in average_and_best_fifteen[i].keys():
-            col_2 += 1
-            worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['best'])
-        col_2 += 1
-        print('##########')
-        print(i)
-        print(average_and_best_fifteen[i])
-        worksheet_2.write(row_2, col_2, str((len(average_and_best_fifteen[i]['Успішний']['data']) / 10) * 100) + "%")
 
-    else:
-        worksheet_2.write(row_2, col_2, fifteen_by_ten_data[i]['pm'])
-        for progon in fifteen_by_ten_data[i]['runs']:
-            for key in progon.keys():
-                col_2 += 1
-                worksheet_2.write(row_2, col_2, progon[key])
-        for key in average_and_best_fifteen[i].keys():
-            col_2 += 1
-            worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['average'])
-        for key in average_and_best_fifteen[i].keys():
-            col_2 += 1
-            worksheet_2.write(row_2, col_2, average_and_best_fifteen[i][key]['best'])
-        col_2 += 1
-        print('##########')
-        print(i)
-        print(average_and_best_fifteen[i])
-        worksheet_2.write(row_2, col_2, str((len(average_and_best_fifteen[i]['Успішний']['data']) / 10) * 100) + "%")
-
-    row_2 += 1
-
-workbook.close()
+    workbook.close()
