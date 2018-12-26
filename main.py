@@ -14,6 +14,7 @@ list_of_deltas = [2, 2.5, 3, 10]
 
 
 def main(global_children, n, t, pm):
+    print('main_started')
     global NFE_COUNTER
     global ten_runs_exited
     children = copy.deepcopy(global_children)
@@ -58,26 +59,27 @@ def main(global_children, n, t, pm):
 
 
 def cycle(n, l, t, pm_start, d):
+    print('cycle_started with values: ', n, l, t, pm_start, d)
     global ten_runs_exited
     global children_dict
     children_dict = {}
     pm = pm_start
-    # print "###################################################################"
-    # print "15 by 10 new parent to count PmMAX"
+    print("###################################################################")
+    print("15 by 10 new parent to count PmMAX")
     fifteen_by_ten_data = {}
     for i in range(15):
         fifteen_by_ten_data[i] = {
             "pm": pm,
             "runs": []
         }
-        # print "---------------------------------------------------------------"
-        # print "Current Pm = " + str(pm)
-        # print "Current D = " + str(d)
-        # print "Cycle #" + str(i)
+        print("---------------------------------------------------------------")
+        print("Current Pm = " + str(pm))
+        print("Current D = " + str(d))
+        print ("Cycle #" + str(i))
         runs = 0
         ten_runs_exited = 0
         while True:
-            # print "Progon #" + str(runs)
+            print("Run #" + str(runs))
             if runs in children_dict:
                 pass
             else:
@@ -119,12 +121,12 @@ def cycle(n, l, t, pm_start, d):
             "pm": cur_pm,
             "runs": []
         }
-        # print "---------------------------------------------------------------"
-        # print "Current Pm = " + str(cur_pm)
-        # print "Cycle #" + str(i)
+        print("---------------------------------------------------------------")
+        print("Current Pm = " + str(cur_pm))
+        print("Cycle #" + str(i))
         runs = 0
         while True:
-            # print "Progon #" + str(runs)
+            print("Run #" + str(runs))
             if runs in children_dict:
                 pass
             else:
@@ -143,26 +145,15 @@ def cycle(n, l, t, pm_start, d):
             })
             if runs == 10:
                 break
-    # print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    # print five_by_ten_data
+    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    print(five_by_ten_data)
     return fifteen_by_ten_data, five_by_ten_data
 
 ##########################################################################################################################################################
 # Функція пристосованності
 ##########################################################################################################################################################
-def nfe(children):
 
-    global NFE_COUNTER
-    health_of_all = []
-    NFE_COUNTER += 1
-    for child in children:
-        formula = math.exp(-0.05 * sum(child))
-        health_of_all.append(formula)
-    best = sorted(health_of_all)[len(health_of_all) - 1]
-    average = reduce(lambda x, y: x + y, health_of_all) / len(health_of_all)
-    return health_of_all, best, average
-
-    # the goal ('fitness') function to be maximized
+# the goal ('fitness') function to be maximized
 def nfe2(children, l):
     health_of_all = []
 
@@ -219,14 +210,18 @@ def create_children(n, l):
 def _exiting_population():
     pass
 
+##########################################################################################################################################################
 #Тут задається розмір!!!!
-for delta in list_of_deltas:
-    fifteen_by_ten_data, five_by_ten_data = cycle(100, 10, 2, 0.2, 0.1)
+##########################################################################################################################################################
 
+for delta in list_of_deltas:
+    print('run with delta = ',delta, 'and_L_value', L_value)
+    fifteen_by_ten_data, five_by_ten_data = cycle(100, L_value, 2, 0.2, 0.1)
     # count average
     average_and_best_fifteen = {
     }
     for i in fifteen_by_ten_data:
+        print('fifteen_by_ten_data started ' + i)
         average_and_best_fifteen[i] = {}
         for progon in fifteen_by_ten_data[i]['runs']:
             for key in progon.keys():
@@ -239,6 +234,7 @@ for delta in list_of_deltas:
                 else:
                     average_and_best_fifteen[i][key]['data'] = []
     for pm in average_and_best_fifteen:
+        print('average_and_best_fefteen started ', pm)
         for key in average_and_best_fifteen[pm].keys():
             if average_and_best_fifteen[pm][key]['data']:
                 average_and_best_fifteen[pm][key]['average'] = reduce(lambda x, y: x + y,
@@ -252,14 +248,13 @@ for delta in list_of_deltas:
             else:
                 average_and_best_fifteen[pm][key]['average'] = 0
                 average_and_best_fifteen[pm][key]['best'] = 0
-
     print("#############")
     print(average_and_best_fifteen)
     print("#############")
-
     average_and_best_five = {
     }
     for i in five_by_ten_data:
+        print('fife_by_ten_data started ', i)
         average_and_best_five[i] = {}
         for progon in five_by_ten_data[i]['runs']:
             for key in progon.keys():
@@ -272,6 +267,7 @@ for delta in list_of_deltas:
                 else:
                     average_and_best_five[i][key]['data'] = []
     for pm in average_and_best_five:
+        print('average_and_best_five started ', pm)
         for key in average_and_best_five[pm].keys():
             if average_and_best_five[pm][key]['data']:
                 average_and_best_five[pm][key]['average'] = reduce(lambda x, y: x + y,
@@ -290,8 +286,11 @@ for delta in list_of_deltas:
     print(average_and_best_five)
     print("#############")
 
+##########################################################################################################################################################
+# Export to excel
+##########################################################################################################################################################
 
-    workbook = xlsxwriter.Workbook('data_with_delta=' + delta + '.xlsx')
+    workbook = xlsxwriter.Workbook('data_with_delta=', delta, '_and_L=', L_value ,'.xlsx')
     worksheet_1 = workbook.add_worksheet()
     worksheet_2 = workbook.add_worksheet()
 
